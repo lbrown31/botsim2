@@ -21,9 +21,10 @@ class ROBOT:
 
     def Prepare_To_Sense(self):
         self.sensors = {}
-        self.touch_matrix = np.zeros((c.steps, len(pyrosim.linkNamesToIndices)))
+        self.touch_matrix = np.zeros((c.steps, 4))
         for linkName in pyrosim.linkNamesToIndices:
-            self.sensors[linkName] = SENSOR(linkName)
+            if (linkName == 'BackLowerLeg' or linkName == 'FrontLowerLeg' or linkName == 'LeftLowerLeg' or linkName == 'RightLowerLeg'):
+                self.sensors[linkName] = SENSOR(linkName)
 
     def Sense(self, t):
         for i, sensor in enumerate(self.sensors.values()):
@@ -31,7 +32,6 @@ class ROBOT:
             touch_val = sensor.Get_Value(t)
             print(touch_val)
             self.touch_matrix[t, i] = 1 if touch_val > 0 else -1
-        #print(self.touch_matrix)
 
     def Prepare_To_Act(self):
         self.motors = {}
@@ -51,14 +51,23 @@ class ROBOT:
         self.nn.Update()
 
     def Get_Fitness(self):
-        basePositionAndOrientation = p.getBasePositionAndOrientation(self.Id)
-        basePosition = basePositionAndOrientation[0]
-        zPosition = basePosition[2]
-        #print(self.touch_matrix)
-        
-        num_minus_ones = np.count_nonzero(self.touch_matrix == -1)
+        max_consecutive_airborne_steps = 0
+        current_consecutive_airborne_steps = 0
+        for t in range(c.steps):
+            # Check if all legs are not touching the ground at timestep t
+            print(self.touch_matrix[t])
+            if np.all(self.touch_matrix[t] == -1):
+                current_consecutive_airborne_steps += 1
+            else:
+                # If any leg touches the ground, reset the count
+                max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
+                current_consecutive_airborne_steps = 0
+
+        # Check if the last segment of airborne steps is the longest
+        max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
+
         f = open(f"fitness/tmp{self.solutionID}.txt", "w")
-        f.write(f"{num_minus_ones}")
+        f.write(f"{max_consecutive_airborne_steps}")
         f.close()
 
         os.system(f"mv fitness/tmp{self.solutionID}.txt fitness/fitness{self.solutionID}.txt")
