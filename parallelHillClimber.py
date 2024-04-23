@@ -12,6 +12,8 @@ class PARALLEL_HILL_CLIMBER:
 
         os.system("rm brains/brain*.nndf")
         os.system("rm fitness/fitness*.txt")
+        os.system("rm fitness/tmp*.txt")
+
 
         self.Create_World()
         self.Create_Body()

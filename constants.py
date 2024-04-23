@@ -1,7 +1,7 @@
 steps = 1000
 sleep = 1/1000000
 
-maxForce = 30
+maxForce = 35
 
 numberOfGenerations = 20
 populationSize = 10
