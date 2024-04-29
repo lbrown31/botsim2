@@ -24,7 +24,7 @@ class SOLUTION:
             time.sleep(0.01)
 
         fitnessFile = open(fitnessFileName, "r")
-        self.fitness = float(fitnessFile.readline())
+        self.fitness = int(float(fitnessFile.readline()))
         fitnessFile.close()
 
         # os.system(f"rm {fitnessFileName}")

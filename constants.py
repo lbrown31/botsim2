@@ -1,12 +1,14 @@
-steps = 1000
-sleep = 1/1000000
+steps = 500
+sleep = 1/10000
 
-maxForce = 35
+maxForce = 30
 
-numberOfGenerations = 20
-populationSize = 10
+numberOfGenerations = 4
+
+populationSize = 5
 
 numSensorNeurons = 4
 numMotorNeurons = 8
 
 motorJointRange = 0.5
+

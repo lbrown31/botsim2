@@ -1,7 +1,8 @@
 from solution import SOLUTION
 import constants as c
 import copy
-import os
+import os, math
+import numpy as np
 import pyrosim.pyrosim as pyrosim
 
 
@@ -9,18 +10,22 @@ class PARALLEL_HILL_CLIMBER:
     def __init__(self):
         self.parents = {}
         self.nextAvailableID = 0
+        self.generation = 0
 
         os.system("rm brains/brain*.nndf")
         os.system("rm fitness/fitness*.txt")
-        os.system("rm fitness/tmp*.txt")
-
 
         self.Create_World()
         self.Create_Body()
 
+        self.fitness_matrix = np.zeros((c.populationSize, c.numberOfGenerations))
+
         for i in range(c.populationSize):
             self.parents[i] = SOLUTION(self.nextAvailableID)
             self.nextAvailableID += 1
+
+    def Save_Fitness_Matrix(self, filename):
+        np.save(filename, self.fitness_matrix)
 
     def Evolve(self):
         self.parents[0].Start_Simulation("GUI", background=False)
@@ -28,6 +33,7 @@ class PARALLEL_HILL_CLIMBER:
 
         for currentGeneration in range(c.numberOfGenerations):
             print(f"generation: {currentGeneration}")
+            self.generation = currentGeneration
             self.Evolve_For_One_Generation()
 
     def Evolve_For_One_Generation(self):
@@ -37,7 +43,7 @@ class PARALLEL_HILL_CLIMBER:
         
         #self.Print()
         self.Select()
-
+        
     def Spawn(self):
         self.children = {}
 
@@ -54,8 +60,10 @@ class PARALLEL_HILL_CLIMBER:
         for solution in solutions.values():
             solution.Start_Simulation("DIRECT")
 
-        for solution in solutions.values():
+        for index, solution in enumerate(solutions.values()):
             solution.Wait_For_Simulation_To_End()
+            fitness_value = int(solution.fitness)
+            self.fitness_matrix[index, self.generation] = math.trunc(int(fitness_value))
 
     def Select(self):
         for parent in self.parents.keys():

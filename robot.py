@@ -30,12 +30,10 @@ class ROBOT:
         for i, sensor in enumerate(self.sensors.values()):
             # Store touch sensor value in binary matrix
             touch_val = sensor.Get_Value(t)
-            print(touch_val)
             self.touch_matrix[t, i] = 1 if touch_val > 0 else -1
 
     def Prepare_To_Act(self):
         self.motors = {}
-
         for jointName in pyrosim.jointNamesToIndices:
             self.motors[jointName] = MOTOR(jointName)
 
@@ -50,7 +48,13 @@ class ROBOT:
     def Think(self):
         self.nn.Update()
 
+    def UpdateZ(self):
+        basePositionAndOrientation = p.getBasePositionAndOrientation(self.Id)
+        basePosition = basePositionAndOrientation[0]
+        self.max_zPosition = basePosition[2]
+
     def Get_Fitness(self):
+        self.UpdateZ()
         max_consecutive_airborne_steps = 0
         current_consecutive_airborne_steps = 0
         for t in range(c.steps):
@@ -58,6 +62,7 @@ class ROBOT:
             print(self.touch_matrix[t])
             if np.all(self.touch_matrix[t] == -1):
                 current_consecutive_airborne_steps += 1
+                self.UpdateZ()
             else:
                 # If any leg touches the ground, reset the count
                 max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
@@ -65,9 +70,10 @@ class ROBOT:
 
         # Check if the last segment of airborne steps is the longest
         max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
+        fitness = self.max_zPosition * max_consecutive_airborne_steps
 
         f = open(f"fitness/tmp{self.solutionID}.txt", "w")
-        f.write(f"{max_consecutive_airborne_steps}")
+        f.write(f"{fitness}")
         f.close()
 
         os.system(f"mv fitness/tmp{self.solutionID}.txt fitness/fitness{self.solutionID}.txt")
