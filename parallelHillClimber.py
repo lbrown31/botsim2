@@ -19,14 +19,16 @@ class PARALLEL_HILL_CLIMBER:
         self.Create_Body()
 
         self.fitness_matrix = np.zeros((c.populationSize, c.numberOfGenerations))
+        self.jump_matrix = np.zeros((c.populationSize, c.numberOfGenerations))
 
         for i in range(c.populationSize):
             self.parents[i] = SOLUTION(self.nextAvailableID)
             self.nextAvailableID += 1
 
     def Save_Fitness_Matrix(self, filename):
-        np.save(filename, self.fitness_matrix)
-
+        np.savetxt(filename, self.fitness_matrix)
+    def Save_Jump_Matrix(self, filename):
+        np.savetxt(filename, self.jump_matrix)
     def Evolve(self):
         self.parents[0].Start_Simulation("GUI", background=False)
         self.Evaluate(self.parents)
@@ -64,6 +66,8 @@ class PARALLEL_HILL_CLIMBER:
             solution.Wait_For_Simulation_To_End()
             fitness_value = int(solution.fitness)
             self.fitness_matrix[index, self.generation] = math.trunc(int(fitness_value))
+            jump_value = int(solution.jump)
+            self.jump_matrix[index, self.generation] = math.trunc(int(jump_value))
 
     def Select(self):
         for parent in self.parents.keys():

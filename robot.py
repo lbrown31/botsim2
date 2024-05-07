@@ -12,6 +12,8 @@ class ROBOT:
     def __init__(self, solutionID):
         self.Id = p.loadURDF("body.urdf")
         self.solutionID = solutionID
+        self.max_zPosition = 1
+        self.max_xPosition = 1
 
         pyrosim.Prepare_To_Simulate(self.Id)
         self.Prepare_To_Sense()
@@ -49,9 +51,17 @@ class ROBOT:
         self.nn.Update()
 
     def UpdateZ(self):
+        #stateOfLinkZero = p.getLinkState(self.Id, 0)
+        #linkPosition = stateOfLinkZero[0]
+        #zPosition = linkPosition[2]
+
         basePositionAndOrientation = p.getBasePositionAndOrientation(self.Id)
         basePosition = basePositionAndOrientation[0]
-        self.max_zPosition = basePosition[2]
+        if(basePosition[2] > self.max_zPosition):
+            self.max_zPosition = basePosition[2]
+        if(basePosition[0] > self.max_xPosition):
+            self.max_xPosition = basePosition[0]
+        
 
     def Get_Fitness(self):
         self.UpdateZ()
@@ -62,18 +72,22 @@ class ROBOT:
             print(self.touch_matrix[t])
             if np.all(self.touch_matrix[t] == -1):
                 current_consecutive_airborne_steps += 1
-                self.UpdateZ()
             else:
                 # If any leg touches the ground, reset the count
                 max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
                 current_consecutive_airborne_steps = 0
+            self.UpdateZ()
+
 
         # Check if the last segment of airborne steps is the longest
         max_consecutive_airborne_steps = max(max_consecutive_airborne_steps, current_consecutive_airborne_steps)
-        fitness = self.max_zPosition * max_consecutive_airborne_steps
-
+        fitness = max_consecutive_airborne_steps * self.max_xPosition
         f = open(f"fitness/tmp{self.solutionID}.txt", "w")
         f.write(f"{fitness}")
+        f.close()
+
+        f = open(f"fitness/jump{self.solutionID}.txt", "w")
+        f.write(f"{self.max_zPosition*10}")
         f.close()
 
         os.system(f"mv fitness/tmp{self.solutionID}.txt fitness/fitness{self.solutionID}.txt")

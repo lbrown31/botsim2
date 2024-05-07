@@ -19,6 +19,7 @@ class SOLUTION:
 
     def Wait_For_Simulation_To_End(self):
         fitnessFileName = f"fitness/fitness{self.myID}.txt"
+        jumpFileName = f"fitness/jump{self.myID}.txt"
 
         while not os.path.exists(fitnessFileName):
             time.sleep(0.01)
@@ -26,6 +27,10 @@ class SOLUTION:
         fitnessFile = open(fitnessFileName, "r")
         self.fitness = int(float(fitnessFile.readline()))
         fitnessFile.close()
+
+        jumpFile = open(jumpFileName, "r")
+        self.jump = int(float(jumpFile.readline()))
+        jumpFile.close()
 
         # os.system(f"rm {fitnessFileName}")
 
